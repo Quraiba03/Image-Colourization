@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Colorization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        
+        .image-section {
+            text-align: center;
+            width: 45%;
+            display: none; /* Hide initially */
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-right: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        a button {
+            background-color: #007bff;
+        }
+        a button:hover {
+            background-color: #0056b3;
+        }
+        #uploadAnother {
+            display: none;
+        }
+        #downloadLink, #downloadBwLink {
+            display: none;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <h1 class="heading">IMAGE PROCESSING</h1>
+        <div class="image-container">
+            <div class="image-section" id="uploadedSection">
+                <h2>Uploaded Image</h2>
+                <img id="originalImage" src="" alt="Uploaded Image">
+            </div>
+            <div class="image-section" id="processedSection">
+                <h2>Processed Image</h2>
+                <img id="processedImage" src="" alt="Processed Image">
+            </div>
+        </div>
+        <form id="uploadForm" enctype="multipart/form-data" method="POST">
+            <input type="file" name="image" accept="image/*" required>
+            <button type="submit">Upload</button>
+        </form>
+        <button id="uploadAnother">Upload Another Image</button>
+        <a id="downloadLink" href="#" download="processed_image.jpg">
+            <button>Download Processed Image</button>
+        </a>
+        <a id="downloadBwLink" href="#" download="bw_image.jpg">
+            <button>Download Original Image</button>
+        </a>
+    </div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.originalImagePath && data.processedImagePath) {
+                    const baseUrl = window.location.origin;
+                    document.getElementById('originalImage').src = `${baseUrl}/uploads/${data.originalImagePath}`;
+                    document.getElementById('processedImage').src = `${baseUrl}/results/${data.processedImagePath}`;
+                    
+                    document.getElementById('uploadedSection').style.display = 'block';
+                    document.getElementById('processedSection').style.display = 'block';
+                    
+                    document.getElementById('downloadLink').href = `${baseUrl}/results/${data.processedImagePath}`;
+                    document.getElementById('downloadBwLink').href = `${baseUrl}/uploads/${data.originalImagePath}`;
+                    
+                    document.getElementById('downloadLink').style.display = 'block';
+                    document.getElementById('downloadBwLink').style.display = 'block';
+                    document.getElementById('uploadAnother').style.display = 'block';
+                } else {
+                    console.error('Error: No valid image paths returned');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('uploadAnother').addEventListener('click', function() {
+            document.getElementById('originalImage').src = '';
+            document.getElementById('processedImage').src = '';
+            document.getElementById('uploadedSection').style.display = 'none';
+            document.getElementById('processedSection').style.display = 'none';
+            document.getElementById('downloadLink').style.display = 'none';
+            document.getElementById('downloadBwLink').style.display = 'none';
+            document.getElementById('uploadForm').reset();
+            document.getElementById('uploadAnother').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
